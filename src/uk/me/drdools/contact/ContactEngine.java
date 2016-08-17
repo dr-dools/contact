@@ -120,7 +120,10 @@ public class ContactEngine implements ContactMessageListener
         try
         {
             this.channel.close();
-            this.messageHandler.shutdown();
+            if (this.messageHandler != null)
+            {
+            	this.messageHandler.shutdown();
+            }
         }
         catch (IOException e)
         {}
