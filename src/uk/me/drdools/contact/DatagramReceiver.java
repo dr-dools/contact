@@ -1,9 +1,10 @@
 package uk.me.drdools.contact;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
 import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
 
 
 /**
@@ -13,15 +14,15 @@ import java.nio.channels.DatagramChannel;
 class DatagramReceiver implements Runnable
 {
 
-    private final DatagramChannel dc;
+    private final MulticastSocket sock;
 
     private final ContactEngine engine;
 
     private boolean running = false;
 
-    public DatagramReceiver(DatagramChannel dc, ContactEngine engine)
+    public DatagramReceiver(MulticastSocket socket, ContactEngine engine)
     {
-        this.dc = dc;
+        this.sock = socket;
         this.engine = engine;
     }
 
@@ -38,18 +39,22 @@ class DatagramReceiver implements Runnable
 
         this.running = true;
 
-        ByteBuffer buff = ByteBuffer.allocate(1024);
+        ByteBuffer buff = ByteBuffer.allocate(512);
+        DatagramPacket recv = new DatagramPacket(buff.array(), buff.capacity());
+        
 
         while(this.running)
         {
             try
             {
-                InetSocketAddress src = (InetSocketAddress)this.dc.receive(buff);
-
-                buff.flip();
+                this.sock.receive(recv);
 
                 try
                 {
+                    InetSocketAddress src = (InetSocketAddress)recv.getSocketAddress();
+                    
+                    /*buff.flip();*/
+                    
                     ContactMessage msg = ContactMessage.fromBytes(buff, src.getAddress());
                     ContactMessageHandler handleTask = new ContactMessageHandler(src, msg, engine);
                     engine.execute(handleTask);

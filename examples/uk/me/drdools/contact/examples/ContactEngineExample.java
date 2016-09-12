@@ -3,7 +3,7 @@ package uk.me.drdools.contact.examples;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
+import java.util.Date;
 import uk.me.drdools.contact.ContactEngine;
 import uk.me.drdools.contact.ContactEntity;
 import uk.me.drdools.contact.ContactEntityID;
@@ -33,20 +33,19 @@ public class ContactEngineExample
         engine.setMessageListener(new ContactMessageListener()
         {
             @Override
-            public void contactEntityFound(ContactEntity entity)
+            public void contactEntityFound(ContactEntity entity, Date timestamp)
             {
-                System.out.println("*** Contact Entity Found: "+entity.toString());
+                System.out.printf("*** Contact Entity Found (@%s): %s\n", timestamp, entity.toString());
             }
         });
+        
 
         try
         {
-            // NI to use
-            NetworkInterface ni = NetworkInterface.getByName("lo0");
             InetSocketAddress destGroup = new InetSocketAddress(DISC_MCAST_GRP, DISC_MCAST_PORT);
             System.out.print("Starting ContactEngine (joining Multicast group)...");
             start = System.currentTimeMillis();
-            engine.start(ni, destGroup);
+            engine.start(destGroup);
             end = System.currentTimeMillis();
             System.out.println("Done (took "+(end-start)+" ms)");
         }
@@ -71,7 +70,7 @@ public class ContactEngineExample
             end = System.currentTimeMillis();
             System.out.println("Done (took "+(end-start)+" ms)");
 
-            Thread.sleep(1000);
+            Thread.sleep(2000);
 
             System.out.println("=================================");
 
@@ -84,8 +83,7 @@ public class ContactEngineExample
             System.out.println("Done (took "+(end-start)+" ms)");
 
 
-
-            Thread.sleep(1000);
+            Thread.sleep(2000);
 
             System.out.println("=================================");
 
@@ -95,8 +93,6 @@ public class ContactEngineExample
             engine.sendSearch(searchID);
             end = System.currentTimeMillis();
             System.out.println("Done (took "+(end-start)+" ms)");
-
-
         }
         catch(Exception e)
         {
@@ -105,16 +101,23 @@ public class ContactEngineExample
             System.exit(1);
         }
 
-        try {
-                Thread.sleep(1000);
-        } catch (InterruptedException ex) {
+        
+        try
+        {
+            Thread.sleep(2000);  
         }
-
+        catch (InterruptedException ex)
+        {
+        }
+        
 
         // cleanup before exit
-        try {
+        try
+        {
             engine.stop();
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
         }
 
     }

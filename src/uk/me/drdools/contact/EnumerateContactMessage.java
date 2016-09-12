@@ -1,7 +1,7 @@
 package uk.me.drdools.contact;
 
-import java.net.InetAddress;
 import java.nio.ByteBuffer;
+
 
 /**
  *
@@ -14,7 +14,7 @@ public class EnumerateContactMessage extends ContactMessage
         super(ContactMessage.MESSAGE_TYPE.ENUMERATE);
     }
 
-    public static EnumerateContactMessage fromBytes(ByteBuffer buff, InetAddress addr) throws Exception
+    public static EnumerateContactMessage fromBytes() throws Exception
     {
         return new EnumerateContactMessage();
     }

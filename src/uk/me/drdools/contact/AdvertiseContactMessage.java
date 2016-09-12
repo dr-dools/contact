@@ -68,7 +68,7 @@ public class AdvertiseContactMessage extends ContactMessage
     @Override
     public void onReceive(ContactEngine engine)
     {
-        engine.contactEntityFound(entity);
+        engine.contactEntityFound(entity, super.getTimestamp());
     }
 
     public ContactEntity getEntity()

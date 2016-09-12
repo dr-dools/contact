@@ -1,12 +1,12 @@
 package uk.me.drdools.contact;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.net.StandardProtocolFamily;
-import java.net.StandardSocketOptions;
+import java.net.MulticastSocket;
 import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
+import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
@@ -37,7 +37,7 @@ public class ContactEngine implements ContactMessageListener
     private InetSocketAddress contactAddress = null;
 
     // multicast datagram channel to use
-    private DatagramChannel channel = null;
+    private MulticastSocket sock = null;
 
     private DatagramReceiver dr = null;
 
@@ -95,21 +95,17 @@ public class ContactEngine implements ContactMessageListener
     }
 
 
-    public void start(NetworkInterface ni, InetSocketAddress addr) throws IOException
+    public void start(InetSocketAddress addr) throws IOException
     {
         this.contactAddress = addr;
+        
+        /* Create socket */
+        this.sock = new MulticastSocket(addr.getPort());
+        this.sock.setReuseAddress(true);
+        this.sock.joinGroup(addr.getAddress());
+        
 
-        // init the datagram channel for multicast
-        this.channel = DatagramChannel.open(StandardProtocolFamily.INET);
-        this.channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-        this.channel.bind(new InetSocketAddress(addr.getPort()));
-        this.channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, ni);
-        this.channel.configureBlocking(true);
-
-        // join the right group !
-        this.channel.join(this.contactAddress.getAddress(), ni);
-
-        this.dr = new DatagramReceiver(channel, this);
+        this.dr = new DatagramReceiver(sock, this);
         th = new Thread(this.dr, "ContactEngineDatagramRx");
         th.start();
     }
@@ -117,16 +113,11 @@ public class ContactEngine implements ContactMessageListener
 
     public void stop() throws Exception
     {
-        try
+        this.sock.close();
+        if (this.messageHandler != null)
         {
-            this.channel.close();
-            if (this.messageHandler != null)
-            {
-            	this.messageHandler.shutdown();
-            }
+            this.messageHandler.shutdown();
         }
-        catch (IOException e)
-        {}
     }
 
     public boolean isListening()
@@ -138,22 +129,30 @@ public class ContactEngine implements ContactMessageListener
     {
         EnumerateContactMessage tx = new EnumerateContactMessage();
 
-        // send
-        ByteBuffer bb = ByteBuffer.allocate(1024);
-        tx.getBytes(bb);
-        bb.flip();
-        this.channel.send(bb, this.contactAddress);
+        // get message bytes
+        ByteBuffer buff = ByteBuffer.allocate(512);
+        tx.getBytes(buff);
+        buff.flip();
+        
+        // construct and send packet
+        DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
+        snd.setSocketAddress(this.contactAddress);
+        this.sock.send(snd);
     }
 
     public void sendSearch(ContactEntityID eid) throws Exception
     {
         SearchContactMessage tx = new SearchContactMessage(eid);
 
-        // send
-        ByteBuffer bb = ByteBuffer.allocate(1024);
-        tx.getBytes(bb);
-        bb.flip();
-        this.channel.send(bb, this.contactAddress);
+        // get message bytes
+        ByteBuffer buff = ByteBuffer.allocate(512);
+        tx.getBytes(buff);
+        buff.flip();
+        
+        // construct and send packet
+        DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
+        snd.setSocketAddress(this.contactAddress);
+        this.sock.send(snd);
     }
 
     public void sendAdvert(ContactEntityID eid) throws Exception
@@ -163,13 +162,17 @@ public class ContactEngine implements ContactMessageListener
             ContactEntity entity = this.contactEntities.get(eid);
             if(entity != null)
             {
-                // do advertise
-                ByteBuffer bb = ByteBuffer.allocate(1024);
-
                 ContactMessage tx = new AdvertiseContactMessage(entity);
-                tx.getBytes(bb);
-                bb.flip();
-                this.channel.send(bb, this.contactAddress);
+                
+                // get message bytes
+                ByteBuffer buff = ByteBuffer.allocate(512);
+                tx.getBytes(buff);
+                buff.flip();
+
+                // construct and send packet
+                DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
+                snd.setSocketAddress(this.contactAddress);
+                this.sock.send(snd);
             }
         }
 
@@ -181,13 +184,17 @@ public class ContactEngine implements ContactMessageListener
 
         for(ContactEntity entity: entities)
         {
-            // do advertise
-            ByteBuffer bb = ByteBuffer.allocate(1024);
-
             ContactMessage tx = new AdvertiseContactMessage(entity);
-            tx.getBytes(bb);
-            bb.flip();
-            this.channel.send(bb, this.contactAddress);
+                
+            // get message bytes
+            ByteBuffer buff = ByteBuffer.allocate(512);
+            tx.getBytes(buff);
+            buff.flip();
+
+            // construct and send packet
+            DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
+            snd.setSocketAddress(this.contactAddress);
+            this.sock.send(snd);
         }
     }
 
@@ -252,11 +259,11 @@ public class ContactEngine implements ContactMessageListener
     }
 
     @Override
-    public void contactEntityFound(ContactEntity entity)
+    public void contactEntityFound(ContactEntity entity, Date timestamp)
     {
         if(this.listener != null)
         {
-            this.listener.contactEntityFound(entity);
+            this.listener.contactEntityFound(entity, timestamp);
         }
     }
 }
