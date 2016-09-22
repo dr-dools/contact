@@ -14,13 +14,15 @@ public class ContactEntity
 
     private final InetSocketAddress address;
 
-    public ContactEntity(ContactEntityID eid, InetSocketAddress address, String fname) throws Exception
+    private final InetSocketAddress address2;
+
+    public ContactEntity(ContactEntityID eid, InetSocketAddress address, InetSocketAddress address2, String fname) throws Exception
     {
         // validate EntityID
         if(eid == null) throw new Exception("Must be a valid ContactEntityID ("+eid+" is not valid)");
 
         // validate advertised socket address
-        if(address == null) throw new Exception("Must be a valid InetSocketAddress ("+address+" is not valid)");
+        if((address == null) || (address2 == null)) throw new Exception("Must be a valid InetSocketAddress ("+address+" is not valid)");
 
         // validate friendly name
         if((fname == null) || fname.length() < 5) throw new Exception("Friendly Name is not valid ("+fname+")");
@@ -29,13 +31,14 @@ public class ContactEntity
         // set instance variables
         this.eid = eid;
         this.address = address;
+        this.address2 = address2;
         this.fName = fname;
     }
 
     @Override
     public String toString()
     {
-        return "ContactEntity[id="+this.eid+", address="+this.address+", fName="+this.fName+")";
+        return "ContactEntity[id="+this.eid+", address1="+this.address+", address2="+this.address2+", fName="+this.fName+")";
     }
 
     @Override
@@ -58,6 +61,12 @@ public class ContactEntity
     {
         return address;
     }
+
+    public InetSocketAddress getAddress2() {
+        return address2;
+    }
+
+
 
     public void setfName(String fName)
     {

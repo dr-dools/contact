@@ -54,8 +54,6 @@ class DatagramReceiver implements Runnable
                 {
                     InetSocketAddress src = (InetSocketAddress)recv.getSocketAddress();
 
-                    /*buff.flip();*/
-
                     ContactMessage msg = ContactMessage.fromBytes(buff, src.getAddress());
                     ContactMessageHandler handleTask = new ContactMessageHandler(src, msg, engine);
                     engine.execute(handleTask);

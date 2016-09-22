@@ -58,11 +58,11 @@ public class ContactEngineExample
         // publish the entity for a service
         try
         {
-            /*
+
             for(int i=0; i<5; i++)
             {
                 ContactEntityID service1_id = new ContactEntityID("urn:andium:test:s"+i);
-                ContactEntity service1 = engine.getContactEntity(service1_id, 8080+i, "Service "+i);
+                ContactEntity service1 = engine.getContactEntity(service1_id, 8080+i, 5683+i, "Service "+i);
                 engine.add(service1);
             }
             System.out.print("Sending adverts for all Entities...");
@@ -73,7 +73,7 @@ public class ContactEngineExample
 
             Thread.sleep(2000);
 
-            System.out.println("=================================");*/
+            System.out.println("=================================");
 
 
             // send probe
@@ -85,7 +85,7 @@ public class ContactEngineExample
 
 
             Thread.sleep(2000);
-/*
+
             System.out.println("=================================");
 
             System.out.print("Sending Search request...");
@@ -93,7 +93,7 @@ public class ContactEngineExample
             start = System.currentTimeMillis();
             engine.sendSearch(searchID);
             end = System.currentTimeMillis();
-            System.out.println("Done (took "+(end-start)+" ms)");*/
+            System.out.println("Done (took "+(end-start)+" ms)");
         }
         catch(Exception e)
         {

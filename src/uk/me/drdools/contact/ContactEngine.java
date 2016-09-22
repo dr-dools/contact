@@ -2,7 +2,6 @@ package uk.me.drdools.contact;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.nio.ByteBuffer;
@@ -82,11 +81,12 @@ public class ContactEngine implements ContactMessageListener
 
 //---------------- Methods -----------------------------------------------------
 
-    public ContactEntity getContactEntity(ContactEntityID eid, int port, String fname) throws Exception
+    public ContactEntity getContactEntity(ContactEntityID eid, int port1, int port2, String fname) throws Exception
     {
-        InetSocketAddress isa = new InetSocketAddress(this.contactAddress.getAddress(), port);
+        InetSocketAddress addr1 = new InetSocketAddress(this.contactAddress.getAddress(), port1);
+        InetSocketAddress addr2 = new InetSocketAddress(this.contactAddress.getAddress(), port2);
 
-        ContactEntity rtn = new ContactEntity(eid, isa, fname);
+        ContactEntity rtn = new ContactEntity(eid, addr1, addr2, fname);
         return rtn;
     }
 
@@ -106,7 +106,7 @@ public class ContactEngine implements ContactMessageListener
 
         this.sock.joinGroup(addr.getAddress());
 
-        
+
         this.dr = new DatagramReceiver(sock, this);
         th = new Thread(this.dr, "ContactEngineDatagramRx");
         th.start();
@@ -193,6 +193,7 @@ public class ContactEngine implements ContactMessageListener
 
             // get message bytes
             ByteBuffer buff = ByteBuffer.allocate(512);
+            buff.order(ByteOrder.LITTLE_ENDIAN);
             tx.getBytes(buff);
             buff.flip();
 

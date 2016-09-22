@@ -20,36 +20,34 @@ public class AdvertiseContactMessage extends ContactMessage
 
     public static AdvertiseContactMessage fromBytes(ByteBuffer buff, InetAddress addr) throws Exception
     {
-        System.out.println("AdvertiseContactMessage.fromBytes:");
         // advertised port
-        int port = buff.getInt();
-        InetSocketAddress sAddr = new InetSocketAddress(addr, port);
-        System.out.println("\tport="+port);
+        int port1 = buff.getInt();
+        InetSocketAddress sAddr1 = new InetSocketAddress(addr, port1);
+
+        // advertised port
+        int port2 = buff.getInt();
+        InetSocketAddress sAddr2 = new InetSocketAddress(addr, port2);
 
         // EID
         int tmp = buff.getInt();
-        System.out.println("\teidLength="+tmp);
         byte[] bytes = new byte[tmp];
         buff.get(bytes, 0, tmp);
 
         ContactEntityID eid = new ContactEntityID(new String(bytes));
-        System.out.println("\teid="+eid);
 
         // fname
         tmp = buff.getInt();
-        System.out.println("\tfnameLength="+tmp);
         bytes = new byte[tmp];
         buff.get(bytes, 0, tmp);
         String fname = new String(bytes);
-        System.out.println("\tfname="+fname);
-        System.out.println("*************************************************");
 
-        buff.clear();
+        //buff.clear();
 
-        ContactEntity ce = new ContactEntity(eid, sAddr, fname);
+        ContactEntity ce = new ContactEntity(eid, sAddr1, sAddr2, fname);
 
         return new AdvertiseContactMessage(ce);
     }
+
 
     @Override
     public void getBytes(ByteBuffer buff)
@@ -57,8 +55,11 @@ public class AdvertiseContactMessage extends ContactMessage
         // message type
         buff.putInt(this.getmType().ordinal());
 
-        // advertised port
+        // advertised port1
         buff.putInt(this.entity.getAddress().getPort());
+
+        // advertised port2
+        buff.putInt(this.entity.getAddress2().getPort());
 
         // advertised EID
         String tmp = this.entity.getEid().toString();
