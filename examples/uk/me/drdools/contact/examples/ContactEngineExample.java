@@ -38,7 +38,7 @@ public class ContactEngineExample
                 System.out.printf("*** Contact Entity Found (@%s): %s\n", timestamp, entity.toString());
             }
         });
-        
+
 
         try
         {
@@ -58,6 +58,7 @@ public class ContactEngineExample
         // publish the entity for a service
         try
         {
+            /*
             for(int i=0; i<5; i++)
             {
                 ContactEntityID service1_id = new ContactEntityID("urn:andium:test:s"+i);
@@ -72,7 +73,7 @@ public class ContactEngineExample
 
             Thread.sleep(2000);
 
-            System.out.println("=================================");
+            System.out.println("=================================");*/
 
 
             // send probe
@@ -84,7 +85,7 @@ public class ContactEngineExample
 
 
             Thread.sleep(2000);
-
+/*
             System.out.println("=================================");
 
             System.out.print("Sending Search request...");
@@ -92,7 +93,7 @@ public class ContactEngineExample
             start = System.currentTimeMillis();
             engine.sendSearch(searchID);
             end = System.currentTimeMillis();
-            System.out.println("Done (took "+(end-start)+" ms)");
+            System.out.println("Done (took "+(end-start)+" ms)");*/
         }
         catch(Exception e)
         {
@@ -101,15 +102,16 @@ public class ContactEngineExample
             System.exit(1);
         }
 
-        
+
         try
         {
-            Thread.sleep(2000);  
+            //Thread.sleep(2000);
+            System.in.read();
         }
-        catch (InterruptedException ex)
+        catch (Exception ex)
         {
         }
-        
+
 
         // cleanup before exit
         try

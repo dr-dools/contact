@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
@@ -98,13 +99,14 @@ public class ContactEngine implements ContactMessageListener
     public void start(InetSocketAddress addr) throws IOException
     {
         this.contactAddress = addr;
-        
+
         /* Create socket */
         this.sock = new MulticastSocket(addr.getPort());
         this.sock.setReuseAddress(true);
-        this.sock.joinGroup(addr.getAddress());
-        
 
+        this.sock.joinGroup(addr.getAddress());
+
+        
         this.dr = new DatagramReceiver(sock, this);
         th = new Thread(this.dr, "ContactEngineDatagramRx");
         th.start();
@@ -130,10 +132,11 @@ public class ContactEngine implements ContactMessageListener
         EnumerateContactMessage tx = new EnumerateContactMessage();
 
         // get message bytes
-        ByteBuffer buff = ByteBuffer.allocate(512);
+        ByteBuffer buff = ByteBuffer.allocate(4);
+        buff.order(ByteOrder.LITTLE_ENDIAN);
         tx.getBytes(buff);
         buff.flip();
-        
+
         // construct and send packet
         DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
         snd.setSocketAddress(this.contactAddress);
@@ -146,9 +149,10 @@ public class ContactEngine implements ContactMessageListener
 
         // get message bytes
         ByteBuffer buff = ByteBuffer.allocate(512);
+        buff.order(ByteOrder.LITTLE_ENDIAN);
         tx.getBytes(buff);
         buff.flip();
-        
+
         // construct and send packet
         DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
         snd.setSocketAddress(this.contactAddress);
@@ -163,9 +167,10 @@ public class ContactEngine implements ContactMessageListener
             if(entity != null)
             {
                 ContactMessage tx = new AdvertiseContactMessage(entity);
-                
+
                 // get message bytes
                 ByteBuffer buff = ByteBuffer.allocate(512);
+                buff.order(ByteOrder.LITTLE_ENDIAN);
                 tx.getBytes(buff);
                 buff.flip();
 
@@ -185,7 +190,7 @@ public class ContactEngine implements ContactMessageListener
         for(ContactEntity entity: entities)
         {
             ContactMessage tx = new AdvertiseContactMessage(entity);
-                
+
             // get message bytes
             ByteBuffer buff = ByteBuffer.allocate(512);
             tx.getBytes(buff);

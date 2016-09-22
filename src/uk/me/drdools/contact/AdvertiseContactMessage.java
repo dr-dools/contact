@@ -20,22 +20,29 @@ public class AdvertiseContactMessage extends ContactMessage
 
     public static AdvertiseContactMessage fromBytes(ByteBuffer buff, InetAddress addr) throws Exception
     {
+        System.out.println("AdvertiseContactMessage.fromBytes:");
         // advertised port
         int port = buff.getInt();
         InetSocketAddress sAddr = new InetSocketAddress(addr, port);
+        System.out.println("\tport="+port);
 
         // EID
         int tmp = buff.getInt();
+        System.out.println("\teidLength="+tmp);
         byte[] bytes = new byte[tmp];
         buff.get(bytes, 0, tmp);
 
         ContactEntityID eid = new ContactEntityID(new String(bytes));
+        System.out.println("\teid="+eid);
 
         // fname
         tmp = buff.getInt();
+        System.out.println("\tfnameLength="+tmp);
         bytes = new byte[tmp];
         buff.get(bytes, 0, tmp);
         String fname = new String(bytes);
+        System.out.println("\tfname="+fname);
+        System.out.println("*************************************************");
 
         buff.clear();
 

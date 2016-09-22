@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 
 /**
@@ -13,7 +14,6 @@ import java.nio.ByteBuffer;
  */
 class DatagramReceiver implements Runnable
 {
-
     private final MulticastSocket sock;
 
     private final ContactEngine engine;
@@ -40,8 +40,9 @@ class DatagramReceiver implements Runnable
         this.running = true;
 
         ByteBuffer buff = ByteBuffer.allocate(512);
+        buff.order(ByteOrder.LITTLE_ENDIAN);
         DatagramPacket recv = new DatagramPacket(buff.array(), buff.capacity());
-        
+
 
         while(this.running)
         {
@@ -52,9 +53,9 @@ class DatagramReceiver implements Runnable
                 try
                 {
                     InetSocketAddress src = (InetSocketAddress)recv.getSocketAddress();
-                    
+
                     /*buff.flip();*/
-                    
+
                     ContactMessage msg = ContactMessage.fromBytes(buff, src.getAddress());
                     ContactMessageHandler handleTask = new ContactMessageHandler(src, msg, engine);
                     engine.execute(handleTask);
