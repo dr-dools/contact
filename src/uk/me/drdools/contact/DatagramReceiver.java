@@ -39,10 +39,8 @@ class DatagramReceiver implements Runnable
 
         this.running = true;
 
-        ByteBuffer buff = ByteBuffer.allocate(512);
-        buff.order(ByteOrder.LITTLE_ENDIAN);
-        DatagramPacket recv = new DatagramPacket(buff.array(), buff.capacity());
-
+        byte[] buff = new byte[512];
+        DatagramPacket recv = new DatagramPacket(buff, 512);
 
         while(this.running)
         {
@@ -54,7 +52,10 @@ class DatagramReceiver implements Runnable
                 {
                     InetSocketAddress src = (InetSocketAddress)recv.getSocketAddress();
 
-                    ContactMessage msg = ContactMessage.fromBytes(buff, src.getAddress());
+                    System.out.println("Rx: "+new String(buff, 0, recv.getLength()));
+
+
+                    ContactMessage msg = ContactMessage.fromBytes(buff, recv.getLength(), src.getAddress());
                     ContactMessageHandler handleTask = new ContactMessageHandler(src, msg, engine);
                     engine.execute(handleTask);
                 }
@@ -62,8 +63,6 @@ class DatagramReceiver implements Runnable
                 {
                     e.printStackTrace();
                 }
-
-                buff.clear();
             }
             catch(IOException ex)
             {

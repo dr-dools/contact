@@ -2,6 +2,7 @@ package uk.me.drdools.contact;
 
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import org.json.JSONObject;
 
 /**
  *
@@ -9,36 +10,30 @@ import java.nio.ByteBuffer;
  */
 public class SearchContactMessage extends ContactMessage
 {
-    private final ContactEntityID eid;
+    private final String eid;
 
-    public SearchContactMessage(ContactEntityID entityID)
+    public SearchContactMessage(String entityID)
     {
         super(MESSAGE_TYPE.SEARCH);
         this.eid = entityID;
     }
 
-    public static SearchContactMessage fromBytes(ByteBuffer buff, InetAddress addr) throws Exception
+    public static SearchContactMessage fromBytes(JSONObject root, InetAddress addr) throws Exception
     {
         // EID
-        int tmp = buff.getInt();
-        byte[] bytes = new byte[tmp];
-        buff.get(bytes, 0, tmp);
-
-        ContactEntityID eid = new ContactEntityID(new String(bytes));
+        String eid = root.getString("entityID");
 
         return new SearchContactMessage(eid);
     }
 
     @Override
-    public void getBytes(ByteBuffer buff)
+    public int getBytes(ByteBuffer buff)
     {
-        // message type
-        buff.putInt(this.getmType().ordinal());
+        JSONObject root2 = new JSONObject(this);
 
-        // target EID
-        String tmp = this.eid.toString();
-        buff.putInt(tmp.length());
-        buff.put(tmp.getBytes());
+        ByteBufferWriter writer = new ByteBufferWriter(buff);
+        root2.write(writer);
+        return writer.getSize();
     }
 
 
@@ -53,7 +48,7 @@ public class SearchContactMessage extends ContactMessage
         }
     }
 
-    public ContactEntityID getEntityID()
+    public String getEntityID()
     {
         return this.eid;
     }

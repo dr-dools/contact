@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
+import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Date;
@@ -43,7 +44,7 @@ public class ContactEngine implements ContactMessageListener
 
     private Thread th = null;
 
-    private final Map<ContactEntityID, ContactEntity> contactEntities = new TreeMap();
+    private final Map<String, ContactEntity> contactEntities = new TreeMap();
 
     private ExecutorService messageHandler = null;
 
@@ -81,28 +82,27 @@ public class ContactEngine implements ContactMessageListener
 
 //---------------- Methods -----------------------------------------------------
 
-    public ContactEntity getContactEntity(ContactEntityID eid, int port1, int port2, String fname) throws Exception
-    {
-        InetSocketAddress addr1 = new InetSocketAddress(this.contactAddress.getAddress(), port1);
-        InetSocketAddress addr2 = new InetSocketAddress(this.contactAddress.getAddress(), port2);
-
-        ContactEntity rtn = new ContactEntity(eid, addr1, addr2, fname);
-        return rtn;
-    }
-
     public void setMessageListener(ContactMessageListener listener)
     {
         this.listener = listener;
     }
 
-
     public void start(InetSocketAddress addr) throws IOException
+    {
+        start(null, addr);
+    }
+
+    public void start(NetworkInterface ni, InetSocketAddress addr) throws IOException
     {
         this.contactAddress = addr;
 
         /* Create socket */
         this.sock = new MulticastSocket(addr.getPort());
         this.sock.setReuseAddress(true);
+        if(ni != null)
+        {
+            this.sock.setNetworkInterface(ni);
+        }
 
         this.sock.joinGroup(addr.getAddress());
 
@@ -132,52 +132,54 @@ public class ContactEngine implements ContactMessageListener
         EnumerateContactMessage tx = new EnumerateContactMessage();
 
         // get message bytes
-        ByteBuffer buff = ByteBuffer.allocate(4);
+        ByteBuffer buff = ByteBuffer.allocate(128);
         buff.order(ByteOrder.LITTLE_ENDIAN);
-        tx.getBytes(buff);
+        int size = tx.getBytes(buff);
         buff.flip();
 
         // construct and send packet
-        DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
+        DatagramPacket snd = new DatagramPacket(buff.array(), size);
         snd.setSocketAddress(this.contactAddress);
         this.sock.send(snd);
     }
 
-    public void sendSearch(ContactEntityID eid) throws Exception
+    public void sendSearch(String eid) throws Exception
     {
         SearchContactMessage tx = new SearchContactMessage(eid);
 
         // get message bytes
-        ByteBuffer buff = ByteBuffer.allocate(512);
-        buff.order(ByteOrder.LITTLE_ENDIAN);
-        tx.getBytes(buff);
+        ByteBuffer buff = ByteBuffer.allocate(256);
+
+        int size = tx.getBytes(buff);
         buff.flip();
 
         // construct and send packet
-        DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
+        DatagramPacket snd = new DatagramPacket(buff.array(), size);
         snd.setSocketAddress(this.contactAddress);
         this.sock.send(snd);
     }
 
-    public void sendAdvert(ContactEntityID eid) throws Exception
+    public void sendAdvert(String eid) throws Exception
     {
         synchronized(this.contactEntities)
         {
+            ByteBuffer buff = ByteBuffer.allocate(512);
+
             ContactEntity entity = this.contactEntities.get(eid);
             if(entity != null)
             {
                 ContactMessage tx = new AdvertiseContactMessage(entity);
 
                 // get message bytes
-                ByteBuffer buff = ByteBuffer.allocate(512);
-                buff.order(ByteOrder.LITTLE_ENDIAN);
-                tx.getBytes(buff);
+                int size = tx.getBytes(buff);
                 buff.flip();
 
                 // construct and send packet
-                DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
+                DatagramPacket snd = new DatagramPacket(buff.array(), size);
                 snd.setSocketAddress(this.contactAddress);
                 this.sock.send(snd);
+
+                buff.clear();
             }
         }
 
@@ -185,21 +187,28 @@ public class ContactEngine implements ContactMessageListener
 
     public void sendAdverts() throws Exception
     {
+        int size;
+        ContactMessage tx;
+
+        ByteBuffer buff = ByteBuffer.allocate(512);
+        
+        DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
+        snd.setSocketAddress(this.contactAddress);
+
         ContactEntity[] entities = this.getAdvertisedContactEntities();
 
         for(ContactEntity entity: entities)
         {
-            ContactMessage tx = new AdvertiseContactMessage(entity);
+            buff.clear();
+
+            tx = new AdvertiseContactMessage(entity);
 
             // get message bytes
-            ByteBuffer buff = ByteBuffer.allocate(512);
-            buff.order(ByteOrder.LITTLE_ENDIAN);
-            tx.getBytes(buff);
+            size = tx.getBytes(buff);
             buff.flip();
 
             // construct and send packet
-            DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
-            snd.setSocketAddress(this.contactAddress);
+            snd.setLength(size);
             this.sock.send(snd);
         }
     }
@@ -208,11 +217,11 @@ public class ContactEngine implements ContactMessageListener
     {
         synchronized(contactEntities)
         {
-            this.contactEntities.put(entity.getEid(), entity);
+            this.contactEntities.put(entity.getEntityID(), entity);
         }
     }
 
-    public void remove(ContactEntityID eid)
+    public void remove(String eid)
     {
         synchronized(contactEntities)
         {

@@ -1,8 +1,14 @@
 package uk.me.drdools.contact;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *
@@ -18,58 +24,40 @@ public class AdvertiseContactMessage extends ContactMessage
         this.entity = entity;
     }
 
-    public static AdvertiseContactMessage fromBytes(ByteBuffer buff, InetAddress addr) throws Exception
+    public static AdvertiseContactMessage fromJson(JSONObject root, InetAddress addr) throws Exception
     {
-        // advertised port
-        int port1 = buff.getInt();
-        InetSocketAddress sAddr1 = new InetSocketAddress(addr, port1);
-
-        // advertised port
-        int port2 = buff.getInt();
-        InetSocketAddress sAddr2 = new InetSocketAddress(addr, port2);
+        JSONObject entity = root.getJSONObject("entity");
 
         // EID
-        int tmp = buff.getInt();
-        byte[] bytes = new byte[tmp];
-        buff.get(bytes, 0, tmp);
-
-        ContactEntityID eid = new ContactEntityID(new String(bytes));
+        String eid = entity.getString("entityID");
 
         // fname
-        tmp = buff.getInt();
-        bytes = new byte[tmp];
-        buff.get(bytes, 0, tmp);
-        String fname = new String(bytes);
+        String fname = entity.getString("friendlyName");
 
-        //buff.clear();
+        // create object
+        ContactEntity ce = new ContactEntity(eid, fname, addr);
 
-        ContactEntity ce = new ContactEntity(eid, sAddr1, sAddr2, fname);
+        // get services
+        JSONObject services = entity.getJSONObject("services");
+        int port;
+        for(String sName : services.keySet())
+        {
+            port = services.getInt(sName);
+            ce.setService(sName, port);
+        }
 
         return new AdvertiseContactMessage(ce);
     }
 
 
     @Override
-    public void getBytes(ByteBuffer buff)
+    public int getBytes(ByteBuffer buff)
     {
-        // message type
-        buff.putInt(this.getmType().ordinal());
+        JSONObject root2 = new JSONObject(this);
 
-        // advertised port1
-        buff.putInt(this.entity.getAddress().getPort());
-
-        // advertised port2
-        buff.putInt(this.entity.getAddress2().getPort());
-
-        // advertised EID
-        String tmp = this.entity.getEid().toString();
-        buff.putInt(tmp.length());
-        buff.put(tmp.getBytes());
-
-        // advertised fname
-        tmp = this.entity.getfName();
-        buff.putInt(tmp.length());
-        buff.put(tmp.getBytes());
+        ByteBufferWriter writer = new ByteBufferWriter(buff);
+        root2.write(writer);
+        return writer.getSize();
     }
 
 

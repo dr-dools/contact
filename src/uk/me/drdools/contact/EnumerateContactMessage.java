@@ -1,6 +1,7 @@
 package uk.me.drdools.contact;
 
 import java.nio.ByteBuffer;
+import org.json.JSONObject;
 
 
 /**
@@ -14,16 +15,14 @@ public class EnumerateContactMessage extends ContactMessage
         super(ContactMessage.MESSAGE_TYPE.ENUMERATE);
     }
 
-    public static EnumerateContactMessage fromBytes() throws Exception
-    {
-        return new EnumerateContactMessage();
-    }
-
     @Override
-    public void getBytes(ByteBuffer buff)
+    public int getBytes(ByteBuffer buff)
     {
-        // message type
-        buff.putInt(this.getmType().ordinal());
+        JSONObject root2 = new JSONObject(this);
+
+        ByteBufferWriter writer = new ByteBufferWriter(buff);
+        root2.write(writer);
+        return writer.getSize();
     }
 
     @Override

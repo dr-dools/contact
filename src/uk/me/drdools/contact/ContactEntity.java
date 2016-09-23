@@ -1,6 +1,10 @@
 package uk.me.drdools.contact;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  *
@@ -10,35 +14,39 @@ public class ContactEntity
 {
     private String fName = null;
 
-    private final ContactEntityID eid;
+    private final String eid;
 
-    private final InetSocketAddress address;
+    private final Map<String, Integer> services = new TreeMap();
 
-    private final InetSocketAddress address2;
+    private InetAddress addr = null;
 
-    public ContactEntity(ContactEntityID eid, InetSocketAddress address, InetSocketAddress address2, String fname) throws Exception
+    public ContactEntity(String eid, String fname) throws Exception
+    {
+        this(eid, fname, Inet4Address.getLocalHost());
+    }
+
+    public ContactEntity(String eid, String fname, InetAddress addr) throws Exception
     {
         // validate EntityID
         if(eid == null) throw new Exception("Must be a valid ContactEntityID ("+eid+" is not valid)");
 
-        // validate advertised socket address
-        if((address == null) || (address2 == null)) throw new Exception("Must be a valid InetSocketAddress ("+address+" is not valid)");
-
         // validate friendly name
         if((fname == null) || fname.length() < 5) throw new Exception("Friendly Name is not valid ("+fname+")");
 
+        // validate inet address
+        if(addr == null) throw new Exception("Address is not valid ("+addr+")");
+
+        this.addr = addr;
 
         // set instance variables
         this.eid = eid;
-        this.address = address;
-        this.address2 = address2;
         this.fName = fname;
     }
 
     @Override
     public String toString()
     {
-        return "ContactEntity[id="+this.eid+", address1="+this.address+", address2="+this.address2+", fName="+this.fName+")";
+        return "ContactEntity[id="+this.eid+", fName="+this.fName+" @ "+this.addr+"]";
     }
 
     @Override
@@ -47,29 +55,50 @@ public class ContactEntity
         return this.eid.equals(obj);
     }
 
-    public String getfName()
+    public String getFriendlyName()
     {
         return fName;
     }
 
-    public ContactEntityID getEid()
+    public void setFriendlyName(String fName)
+    {
+        this.fName = fName;
+    }
+
+    public String getEntityID()
     {
         return eid;
     }
 
-    public InetSocketAddress getAddress()
+    public void setService(String serviceName, int port)
     {
-        return address;
+        synchronized(this.services)
+        {
+            this.services.put(serviceName, port);
+        }
     }
 
-    public InetSocketAddress getAddress2() {
-        return address2;
+    public InetSocketAddress getService(String serviceName)
+    {
+        int port = 0;
+        synchronized(this.services)
+        {
+            port = this.services.get(serviceName);
+        }
+
+        return new InetSocketAddress(this.addr, port);
     }
 
-
-
-    public void setfName(String fName)
+    public String[] serviceNames()
     {
-        this.fName = fName;
+        synchronized(this.services)
+        {
+            return this.services.keySet().toArray(new String[0]);
+        }
+    }
+
+    public Map<String, Integer> getServices()
+    {
+        return this.services;
     }
 }

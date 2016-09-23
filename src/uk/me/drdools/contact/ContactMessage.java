@@ -3,6 +3,8 @@ package uk.me.drdools.contact;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.Date;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 /**
  *
@@ -13,7 +15,7 @@ public abstract class ContactMessage
     public enum MESSAGE_TYPE { ADVERTISE, SEARCH, ENUMERATE };
 
     private final MESSAGE_TYPE mType;
-    
+
     private final Date timestamp;
 
     protected ContactMessage(MESSAGE_TYPE mType)
@@ -22,45 +24,48 @@ public abstract class ContactMessage
         this.timestamp = new Date();
     }
 
-    public static ContactMessage fromBytes(ByteBuffer buff, InetAddress addr) throws Exception
+    public static ContactMessage fromBytes(byte[] buff, int length, InetAddress addr) throws Exception
     {
-        // message type
-        int tmp = buff.getInt();
-        MESSAGE_TYPE type = MESSAGE_TYPE.values()[tmp];
+        JSONTokener tokener = new JSONTokener(new String(buff, 0, length));
+        JSONObject root = new JSONObject(tokener);
+
+
+        // get message type
+        MESSAGE_TYPE type = MESSAGE_TYPE.valueOf(root.getString("type"));
 
         switch(type)
         {
             case ADVERTISE:
-                return AdvertiseContactMessage.fromBytes(buff, addr);
+                return AdvertiseContactMessage.fromJson(root, addr);
 
             case ENUMERATE:
-                return EnumerateContactMessage.fromBytes();
+                return new EnumerateContactMessage();
 
             case SEARCH:
-                return SearchContactMessage.fromBytes(buff, addr);
+                return SearchContactMessage.fromBytes(root, addr);
 
             default:
                 throw new Exception("Unknown ContactMessage Type");
         }
     }
 
-    public abstract void getBytes(ByteBuffer buff);
-    
+    public abstract int getBytes(ByteBuffer buff);
+
 
     public abstract void onReceive(ContactEngine engine);
-    
-    
+
+
     public Date getTimestamp()
     {
         return this.timestamp;
     }
-    
 
-    public MESSAGE_TYPE getmType()
+
+    public MESSAGE_TYPE getType()
     {
         return mType;
     }
-    
+
 
     @Override
     public String toString()

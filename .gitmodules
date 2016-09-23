@@ -1,0 +1,3 @@
+[submodule "lib/JSON-java"]
+	path = lib/JSON-java
+	url = git@github.com:stleary/JSON-java.git
