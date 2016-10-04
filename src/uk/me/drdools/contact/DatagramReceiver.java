@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 
 /**
@@ -25,7 +23,6 @@ class DatagramReceiver implements Runnable
         this.sock = socket;
         this.engine = engine;
     }
-
 
     public boolean isRunning()
     {
@@ -53,7 +50,6 @@ class DatagramReceiver implements Runnable
                     InetSocketAddress src = (InetSocketAddress)recv.getSocketAddress();
 
                     System.out.println("Rx: "+new String(buff, 0, recv.getLength()));
-
 
                     ContactMessage msg = ContactMessage.fromBytes(buff, recv.getLength(), src.getAddress());
                     ContactMessageHandler handleTask = new ContactMessageHandler(src, msg, engine);

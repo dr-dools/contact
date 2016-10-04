@@ -13,8 +13,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.net.URL;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.TreeMap;
 import uk.me.drdools.contact.ContactEngine;
@@ -119,14 +121,14 @@ public class SystemTrayExample implements ContactMessageListener, ActionListener
             trayIcon = null;
         }
 
+
+        NetworkInterface ni = NetworkInterface.getByName("en1");
         engine = ContactEngine.getSingleton();
         engine.setMessageListener(this);
-
         InetSocketAddress destGroup = new InetSocketAddress(DISC_MCAST_GRP, DISC_MCAST_PORT);
-        engine.start(destGroup);
+        engine.start(ni, destGroup);
 
         status.setLabel("Status: Up");
-
     }
 
     public static void main(String[] args)

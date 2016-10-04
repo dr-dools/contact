@@ -132,7 +132,7 @@ public class ContactEngineExample
 
             //ContactEntityID searchID = new ContactEntityID("urn:andium:test:s3");
             String searchID = "urn:andium:eid:95d7347d-9560-4e2e-bd43-9f90c8b2e67f";
-            //sendSearch(engine, searchID);
+            sendSearch(engine, searchID);
 
 
             //Thread.sleep(2000);

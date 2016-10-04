@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Date;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,6 +49,7 @@ public class ContactEngine implements ContactMessageListener
 
     private ExecutorService messageHandler = null;
 
+    private final Random rand = new Random();
 
 //---------------- Constructor -------------------------------------------------
 
@@ -87,10 +89,11 @@ public class ContactEngine implements ContactMessageListener
         this.listener = listener;
     }
 
+    /*
     public void start(InetSocketAddress addr) throws IOException
     {
         start(null, addr);
-    }
+    }*/
 
     public void start(NetworkInterface ni, InetSocketAddress addr) throws IOException
     {
@@ -103,9 +106,9 @@ public class ContactEngine implements ContactMessageListener
         {
             this.sock.setNetworkInterface(ni);
         }
+        this.sock.setTimeToLive(10);
 
         this.sock.joinGroup(addr.getAddress());
-
 
         this.dr = new DatagramReceiver(sock, this);
         th = new Thread(this.dr, "ContactEngineDatagramRx");
@@ -140,6 +143,7 @@ public class ContactEngine implements ContactMessageListener
         // construct and send packet
         DatagramPacket snd = new DatagramPacket(buff.array(), size);
         snd.setSocketAddress(this.contactAddress);
+
         this.sock.send(snd);
     }
 
@@ -191,7 +195,7 @@ public class ContactEngine implements ContactMessageListener
         ContactMessage tx;
 
         ByteBuffer buff = ByteBuffer.allocate(512);
-        
+
         DatagramPacket snd = new DatagramPacket(buff.array(), buff.capacity());
         snd.setSocketAddress(this.contactAddress);
 
@@ -199,6 +203,13 @@ public class ContactEngine implements ContactMessageListener
 
         for(ContactEntity entity: entities)
         {
+            try
+            {
+                Thread.sleep(this.getRandom(3000));
+            }
+            catch(Exception e)
+            {}
+
             buff.clear();
 
             tx = new AdvertiseContactMessage(entity);
@@ -247,6 +258,14 @@ public class ContactEngine implements ContactMessageListener
         }
     }
 
+    public boolean hasEntity(String eid)
+    {
+        synchronized(contactEntities)
+        {
+            return contactEntities.containsKey(eid);
+        }
+    }
+
     public String easterEgg()
     {
         return "this is for Ari!";
@@ -280,5 +299,10 @@ public class ContactEngine implements ContactMessageListener
         {
             this.listener.contactEntityFound(entity, timestamp);
         }
+    }
+
+    public int getRandom(int bounds)
+    {
+        return rand.nextInt(bounds);
     }
 }

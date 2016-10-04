@@ -2,6 +2,7 @@ package uk.me.drdools.contact;
 
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.util.Random;
 import org.json.JSONObject;
 
 /**
@@ -40,11 +41,24 @@ public class SearchContactMessage extends ContactMessage
     @Override
     public void onReceive(ContactEngine engine)
     {
-        System.out.println("*** Rx: Search request (eid="+eid+")");
-        try {
-            engine.sendAdvert(this.eid);
-        } catch (Exception ex) {
+        // only advertise if we are the subject of the search
+        if(engine.hasEntity(eid))
+        {
+            System.out.println("*** Rx: Search request (eid="+eid+"), sending ADVERT");
+            try
+            {
+                Thread.sleep(engine.getRandom(5000));
+            }
+            catch(Exception e)
+            {}
 
+
+            try
+            {
+                engine.sendAdvert(this.eid);
+            }
+            catch (Exception ex)
+            {}
         }
     }
 

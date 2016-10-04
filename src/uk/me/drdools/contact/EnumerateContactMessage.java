@@ -29,14 +29,13 @@ public class EnumerateContactMessage extends ContactMessage
     public void onReceive(ContactEngine engine)
     {
         System.out.println("*** Rx: Enumerate request... sending adverts");
+
         try
         {
             engine.sendAdverts();
         }
         catch(Exception e)
-        {
-
-        }
+        {}
     }
 
     @Override
